@@ -1,0 +1,14 @@
+{
+  "_comment": "MAC address shape. A locally administered ('random', 'private') address is what iOS 14+, Android 10+, watchOS, Windows and macOS use per Wi-Fi network by default, so it points at a personal mobile device -- but VMs and containers use them too (see the specific prefixes).",
+  "rules": [
+    {"id": "mac.random.phone", "category": "phone", "weight": 0.4, "when": {"random_mac": true}, "label": "Device with a private MAC", "unless": {"mac": "^(02:42|52:54:00|0a:00:27|02:00:4c)"}, "detail": "randomized (private) MAC: phones use one per Wi-Fi network"},
+    {"id": "mac.random.tablet", "category": "tablet", "weight": 0.15, "when": {"random_mac": true}, "unless": {"mac": "^(02:42|52:54:00|0a:00:27|02:00:4c)"}},
+    {"id": "mac.random.watch", "category": "watch", "weight": 0.15, "when": {"random_mac": true}, "unless": {"mac": "^(02:42|52:54:00|0a:00:27|02:00:4c)"}},
+    {"id": "mac.random.laptop", "category": "laptop", "weight": 0.2, "when": {"random_mac": true}, "unless": {"mac": "^(02:42|52:54:00|0a:00:27|02:00:4c)"}},
+    {"id": "mac.docker", "category": "server", "weight": 0.85, "when": {"mac": "^02:42:"}, "label": "Docker container", "detail": "02:42:* is Docker's bridge MAC range"},
+    {"id": "mac.qemu", "category": "server", "weight": 0.85, "when": {"mac": "^52:54:00:"}, "label": "Virtual machine (QEMU/KVM)", "detail": "52:54:00:* is the QEMU/KVM default"},
+    {"id": "mac.virtualbox", "category": "server", "weight": 0.8, "when": {"mac": "^(08:00:27|0a:00:27):"}, "label": "VirtualBox VM"},
+    {"id": "mac.hyperv", "category": "server", "weight": 0.8, "when": {"mac": "^00:15:5d:"}, "label": "Hyper-V VM"},
+    {"id": "mac.vmware", "category": "server", "weight": 0.8, "when": {"mac": "^(00:0c:29|00:50:56|00:05:69):"}, "label": "VMware VM"}
+  ]
+}

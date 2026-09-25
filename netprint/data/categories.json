@@ -1,0 +1,28 @@
+{
+  "_comment": "Device categories. 'icon' is a Material Design Icon (https://pictogrammers.com/library/mdi/). 'network_gear' marks devices that route or bridge other devices' traffic.",
+  "categories": [
+    {"id": "phone", "label": "Phone", "icon": "mdi:cellphone", "description": "Smartphones (Android, iPhone)"},
+    {"id": "tablet", "label": "Tablet", "icon": "mdi:tablet", "description": "iPad, Android tablets, e-readers"},
+    {"id": "watch", "label": "Watch", "icon": "mdi:watch", "description": "Smart watches and fitness bands with Wi-Fi"},
+    {"id": "laptop", "label": "Laptop", "icon": "mdi:laptop", "description": "Laptops and notebooks (MacBook, ThinkPad, ...)"},
+    {"id": "desktop", "label": "Desktop", "icon": "mdi:desktop-tower-monitor", "description": "Desktop PCs, iMac, Mac mini"},
+    {"id": "tv", "label": "TV", "icon": "mdi:television", "description": "Smart TVs"},
+    {"id": "media-player", "label": "Media player", "icon": "mdi:cast", "description": "Streaming boxes and sticks: Chromecast, Apple TV, Android TV boxes, Roku, Fire TV"},
+    {"id": "speaker", "label": "Speaker / voice assistant", "icon": "mdi:speaker", "description": "Smart speakers and voice assistants (Yandex Station, Echo, HomePod, Nest, Sonos)"},
+    {"id": "printer", "label": "Printer", "icon": "mdi:printer", "description": "Printers and MFPs"},
+    {"id": "3d-printer", "label": "3D printer", "icon": "mdi:printer-3d", "description": "3D printers (Klipper/Moonraker, OctoPrint, Creality, Bambu, Prusa, Snapmaker)"},
+    {"id": "camera", "label": "Camera", "icon": "mdi:cctv", "description": "IP cameras, doorbells, NVRs"},
+    {"id": "router", "label": "Router", "icon": "mdi:router-network", "network_gear": true, "description": "A router / gateway (NAT, DHCP)"},
+    {"id": "access-point", "label": "Access point / mesh node", "icon": "mdi:router-wireless", "network_gear": true, "description": "Wi-Fi access points, mesh nodes, repeaters, routers in bridge/AP mode"},
+    {"id": "nas", "label": "NAS", "icon": "mdi:nas", "description": "Network storage"},
+    {"id": "server", "label": "Server", "icon": "mdi:server", "description": "Home servers, Home Assistant hosts, VMs, containers"},
+    {"id": "iot-plug", "label": "Smart plug / relay", "icon": "mdi:power-socket-eu", "description": "Smart sockets, relays, switches (Tuya, Shelly, Sonoff, Tasmota)"},
+    {"id": "iot-light", "label": "Smart light", "icon": "mdi:lightbulb", "description": "Smart bulbs, LED strips, lamps (WLED, Yeelight, Hue)"},
+    {"id": "iot-sensor", "label": "Smart sensor / appliance", "icon": "mdi:home-automation", "description": "Sensors, thermostats, climate and other smart appliances"},
+    {"id": "ir-remote", "label": "IR remote", "icon": "mdi:remote", "description": "IR/RF blasters and universal remotes (Broadlink, ESPHome IR)"},
+    {"id": "esp-diy", "label": "DIY ESP device", "icon": "mdi:chip", "description": "Self-built ESP8266/ESP32 devices (ESPHome, Arduino)"},
+    {"id": "game-console", "label": "Game console", "icon": "mdi:gamepad-variant", "description": "PlayStation, Xbox, Nintendo Switch, Steam Deck"},
+    {"id": "raspberry-pi", "label": "Single-board computer", "icon": "mdi:raspberry-pi", "description": "Raspberry Pi and similar SBCs"},
+    {"id": "unknown", "label": "Unknown", "icon": "mdi:help-network", "description": "Not enough evidence"}
+  ]
+}

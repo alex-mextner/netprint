@@ -1,0 +1,18 @@
+[
+  {"comment": "Klipper printer on an AMPAK Wi-Fi module",
+   "vendor": "AMPAK", "open_ports": [80, 7125],
+   "http": [{"port": 80, "title": "Mainsail", "markers": ["mainsail", "moonraker"]}],
+   "expect": {"category": "3d-printer", "min_confidence": 0.95}},
+  {"comment": "Creality K1-family printer",
+   "open_ports": [80, 4408, 7125, 9999],
+   "http": [{"port": 4408, "title": "Fluidd"}],
+   "expect": {"category": "3d-printer", "min_confidence": 0.95}},
+  {"comment": "Brother laser printer",
+   "vendor": "Brother", "open_ports": [80, 631, 9100],
+   "mdns": [{"type": "_ipp._tcp", "name": "Brother HL-L2350DW series", "txt": {"ty": "Brother HL-L2350DW series"}}],
+   "expect": {"category": "printer", "label": "Brother HL-L2350DW series"}},
+  {"comment": "a CUPS server sharing a printer is not a printer",
+   "vendor": "Intel Corporate", "hostnames": ["ubuntu-server"], "open_ports": [22, 631],
+   "mdns": [{"type": "_ipp._tcp", "name": "Shared printer", "txt": {"product": "(DNSSD Printer)"}}],
+   "expect": {"category": "server"}}
+]

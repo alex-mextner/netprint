@@ -1,0 +1,30 @@
+{
+  "_comment": "TTL, NetBIOS, DHCP option 60 and collector-provided facts ('extra'). Well-known extra keys: gateway=1 (the default gateway), self=1 (the machine running the collector), miwifi.* (Xiaomi router init_info / device list), wifi=1 (a router API says the device is a Wi-Fi client).",
+  "rules": [
+    {"id": "ttl.windows", "category": "desktop", "weight": 0.3, "when": {"ttl": [100, 128]}, "detail": "TTL {ttl}: Windows"},
+    {"id": "ttl.windows.laptop", "category": "laptop", "weight": 0.3, "when": {"ttl": [100, 128]}},
+    {"id": "ttl.windows.not-phone", "category": "phone", "weight": -0.5, "when": {"ttl": [100, 128]}, "detail": "TTL {ttl} is Windows, not a phone"},
+    {"id": "ttl.255", "category": "iot-sensor", "weight": 0.1, "when": {"ttl": [200, 255]}, "detail": "TTL {ttl}: embedded stack / network gear"},
+    {"id": "ttl.255.router", "category": "router", "weight": 0.1, "when": {"ttl": [200, 255]}},
+
+    {"id": "netbios.present", "category": "desktop", "weight": 0.2, "when": {"netbios": "."}, "detail": "answers NetBIOS ({netbios}): Windows or Samba"},
+    {"id": "netbios.present.laptop", "category": "laptop", "weight": 0.2, "when": {"netbios": "."}},
+    {"id": "netbios.present.not-phone", "category": "phone", "weight": -0.3, "when": {"netbios": "."}, "unless": {"hostname": "android|iphone|phone"}},
+
+    {"id": "dhcp.msft", "category": "desktop", "weight": 0.35, "when": {"dhcp_vendor": "^MSFT"}, "detail": "DHCP vendor class {dhcp_vendor} (Windows)"},
+    {"id": "dhcp.msft.laptop", "category": "laptop", "weight": 0.35, "when": {"dhcp_vendor": "^MSFT"}},
+    {"id": "dhcp.android", "category": "phone", "weight": 0.6, "when": {"dhcp_vendor": "^android-dhcp"}, "detail": "DHCP vendor class {dhcp_vendor}"},
+    {"id": "dhcp.udhcp", "category": "iot-sensor", "weight": 0.15, "when": {"dhcp_vendor": "^udhcp"}},
+
+    {"id": "extra.gateway", "category": "router", "weight": 0.97, "when": {"extra": {"gateway": "^1$"}}, "label": "Main router", "source": "network", "detail": "the LAN's default gateway"},
+    {"id": "extra.gateway-iface", "category": "router", "weight": 0.95, "when": {"extra": {"gateway_iface": "^1$"}}, "label": "Main router (second interface)", "source": "network", "detail": "a MAC next to the gateway's: another interface of the gateway"},
+    {"id": "extra.self.server", "category": "server", "weight": 0.4, "when": {"extra": {"self": "^1$"}}, "source": "network", "detail": "the host running the collector"},
+    {"id": "extra.self.not-phone", "category": "phone", "weight": -0.9, "when": {"extra": {"self": "^1$"}}, "source": "network", "detail": "the collector's own host is not a phone"},
+    {"id": "extra.miwifi.ap", "category": "access-point", "weight": 0.97, "when": {"extra": {"miwifi.model": "^xiaomi\\.router\\.", "miwifi.wifi_ap": "^1$"}}, "label": "{extra.miwifi.display_name}", "vendor": "Xiaomi", "source": "miwifi", "detail": "Xiaomi {extra.miwifi.hardware} in access-point/bridge mode (init_info wifi_ap=1)", "icon": "mdi:router-wireless"},
+    {"id": "extra.miwifi.router", "category": "router", "weight": 0.9, "when": {"extra": {"miwifi.model": "^xiaomi\\.router\\."}}, "unless": {"extra": {"miwifi.wifi_ap": "^1$"}}, "label": "{extra.miwifi.display_name}", "vendor": "Xiaomi", "source": "miwifi", "detail": "Xiaomi {extra.miwifi.hardware} in router mode"},
+    {"id": "extra.miwifi.mesh-node", "category": "access-point", "weight": 0.95, "when": {"extra": {"miwifi.is_ap": "^1$"}}, "vendor": "Xiaomi", "source": "miwifi", "label": "Mesh node", "detail": "listed as a mesh node / AP by the Xiaomi router"},
+    {"id": "extra.miwifi.label-hint", "category": null, "when": {"extra": {"miwifi.display_name": "(?P<n>.+)"}}, "label": "{n}"},
+    {"id": "extra.router-name.hint", "category": null, "when": {"extra": {"miwifi.name": "(?P<n>.+)"}}, "source": "miwifi"},
+    {"id": "extra.wifi-client.not-wired-gear", "category": "desktop", "weight": -0.2, "when": {"extra": {"wifi": "^1$"}}, "detail": "on Wi-Fi: less likely a desktop tower"}
+  ]
+}

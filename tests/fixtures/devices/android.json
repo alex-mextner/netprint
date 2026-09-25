@@ -1,0 +1,21 @@
+[
+  {"comment": "Android default DHCP name on a private MAC",
+   "mac": "3a:00:00:00:00:11", "hostnames": ["android-1f2e3d4c5b6a7980"],
+   "expect": {"category": "phone", "display_name": "Android device", "min_confidence": 0.7}},
+  {"comment": "Samsung Galaxy phone named by model",
+   "mac": "a6:00:00:00:00:12", "hostnames": ["Galaxy-S23"],
+   "expect": {"category": "phone", "label": "Samsung Galaxy", "display_name": "Galaxy-S23"}},
+  {"comment": "Galaxy Tab",
+   "mac": "a6:00:00:00:00:13", "hostnames": ["Galaxy-Tab-S9"],
+   "expect": {"category": "tablet"}},
+  {"comment": "Nothing but a randomized MAC: a phone, weakly",
+   "mac": "8e:00:00:00:00:14",
+   "expect": {"category": "phone", "max_confidence": 0.5}},
+  {"comment": "Xiaomi phone by name",
+   "vendor": "Xiaomi", "hostnames": ["Redmi-Note-12"],
+   "expect": {"category": "phone"}},
+  {"comment": "Android TV box with adb open and a Cast receiver",
+   "mac": "c2:00:00:00:00:15", "open_ports": [5555, 8008, 8009],
+   "mdns": [{"type": "_googlecast._tcp", "name": "Box-abc", "txt": {"md": "Xiaomi TV Box S", "fn": "Bedroom TV box"}}],
+   "expect": {"category": "media-player", "label": "Xiaomi TV Box S", "display_name": "Bedroom TV box"}}
+]

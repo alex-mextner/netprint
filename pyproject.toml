@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netprint"
+version = "0.1.0"
+description = "What kind of device is that? Data-driven fingerprints (OUI, hostname, mDNS, SSDP, HTTP, ports, TTL) that classify home-network devices into categories with an icon, a confidence and the evidence."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Alex Mextner" }]
+keywords = ["network", "fingerprint", "device-classification", "mdns", "ssdp", "oui", "home-assistant"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "ruff==0.16.8", "mypy==2.3.1"]
+
+[project.urls]
+Homepage = "https://github.com/alex-mextner/netprint"
+Issues = "https://github.com/alex-mextner/netprint/issues"
+
+[project.scripts]
+netprint = "netprint.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["netprint*"]
+
+[tool.setuptools.package-data]
+netprint = ["data/*", "data/rules/*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["RUF001"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true

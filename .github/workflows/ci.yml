@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Lint
+        run: uv run --python ${{ matrix.python }} --extra dev ruff check .
+
+      - name: Format check
+        run: uv run --python ${{ matrix.python }} --extra dev ruff format --check .
+
+      - name: Type check
+        run: uv run --python ${{ matrix.python }} --extra dev mypy netprint
+
+      - name: Rules lint
+        run: uv run --python ${{ matrix.python }} python -m netprint lint
+
+      - name: Tests
+        run: uv run --python ${{ matrix.python }} --extra dev pytest -q

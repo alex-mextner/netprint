@@ -1,0 +1,23 @@
+[
+  {"comment": "Xiaomi mesh node in access-point mode (public init_info)",
+   "vendor": "Xiaomi Mobile Software", "open_ports": [80, 443],
+   "http": [{"port": 80, "title": "小米路由器", "markers": ["miwifi"]}],
+   "extra": {"miwifi.model": "xiaomi.router.rd28", "miwifi.hardware": "RD28", "miwifi.wifi_ap": "1",
+             "miwifi.display_name": "Xiaomi Mesh System AX3000 NE"},
+   "expect": {"category": "access-point", "label": "Xiaomi Mesh System AX3000 NE", "network_gear": true,
+              "min_confidence": 0.97}},
+  {"comment": "Xiaomi router in router mode",
+   "vendor": "Xiaomi Mobile Software", "open_ports": [80, 443],
+   "extra": {"miwifi.model": "xiaomi.router.ra70", "miwifi.hardware": "RA70", "miwifi.wifi_ap": "0"},
+   "expect": {"category": "router", "network_gear": true}},
+  {"comment": "cable gateway = the default gateway",
+   "vendor": "Ubee Interactive", "extra": {"gateway": "1"},
+   "ssdp": [{"st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1", "server": "Linux/2.6 UPnP/1.0 synthetic/1.0"}],
+   "expect": {"category": "router", "label": "Main router", "network_gear": true}},
+  {"comment": "a second router someone plugged in",
+   "vendor": "TP-Link Systems", "open_ports": [53, 80],
+   "http": [{"port": 80, "title": "TP-Link Archer AX55"}],
+   "expect": {"category": "router", "network_gear": true}},
+  {"comment": "no evidence at all",
+   "expect": {"category": "unknown"}}
+]
