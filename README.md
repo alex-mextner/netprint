@@ -15,7 +15,7 @@ tv.json: tv (0.99) mdi:television  [TV] Samsung 5 Series (48)
     ...
 ```
 
-- **Data, not code.** ~440 rules in `netprint/data/rules/*.json`; adding a device family is
+- **Data, not code.** ~480 rules in `netprint/data/rules/*.json`; adding a device family is
   a JSON edit plus a fixture. See [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Stdlib only**, Python 3.11+. No network access: netprint classifies, it does not scan.
   Collectors (an mDNS browser, an SSDP listener, a port probe, a router API) live in the
