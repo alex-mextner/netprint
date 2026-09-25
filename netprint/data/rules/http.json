@@ -52,6 +52,12 @@
     {"id": "http.tuya-gw", "category": "iot-sensor", "weight": 0.6, "when": {"http_title": "Tuya|Smart Life"}},
     {"id": "http.yandex", "category": "speaker", "weight": 0.6, "when": {"http_marker": "^yandex-station$"}, "label": "Yandex Station", "vendor": "Yandex"},
     {"id": "http.pi-dashboards", "category": "raspberry-pi", "weight": 0.5, "when": {"http_title": "Raspberry Pi|RaspAP|OctoPi|Pi-hole|DietPi|Banana ?Pi|Orange ?Pi|Rock ?Pi|Odroid"}},
-    {"id": "http.generic-web-server", "category": "server", "weight": 0.2, "when": {"http_server": "^(nginx|Apache|Caddy|lighttpd|Python|TornadoServer|Werkzeug|uvicorn|gunicorn|Jetty|Kestrel|Express|openresty|Go-http)"}, "unless": {"http_server": "^(lighttpd|nginx)$"}, "detail": "general-purpose web server ({http_server})"}
+    {"id": "http.generic-web-server", "category": "server", "weight": 0.2, "when": {"http_server": "^(nginx|Apache|Caddy|lighttpd|Python|TornadoServer|Werkzeug|uvicorn|gunicorn|Jetty|Kestrel|Express|openresty|Go-http)"}, "unless": {"http_server": "^(lighttpd|nginx)$"}, "detail": "general-purpose web server ({http_server})"},
+
+    {"id": "http.sbc-title.product", "category": null, "weight": 0.7, "when": {"http_title": "^(?P<m>(Raspberry|Banana|Orange|Rock|Nano|Radxa) ?Pi( [\\w+]+){0,3})$"}, "vendor": "{m}", "product": "{m}"},
+    {"id": "http.klipper-ui.product", "category": null, "weight": 0.4, "when": {"http_title": "^(?P<u>Mainsail|Fluidd|KlipperScreen)\\b"}, "os": "Klipper"},
+    {"id": "http.creality.services", "category": null, "when": {"http_title": "Creality|K1 ?(Max|SE|C)?\\b|K2 Plus|Ender"}, "services": [{"port": 80, "title": "Creality web UI"}]},
+    {"id": "http.octoprint.os", "category": null, "weight": 0.4, "when": {"http_title": "OctoPrint"}, "os": "OctoPrint"},
+    {"id": "http.server.windows", "category": null, "weight": 0.3, "when": {"http_server": "Microsoft-HTTPAPI|Microsoft-IIS"}, "os": "Windows"}
   ]
 }

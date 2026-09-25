@@ -1,0 +1,29 @@
+{
+  "_comment": "Samsung TV model codes (UE48J5500, UE55TU7100): the letters after the screen size give the model year.",
+  "_source": "Samsung's published model-code scheme (e.g. displayspecifications.com, Samsung support pages).",
+  "entries": {
+    "D": {"year": "2011"},
+    "E": {"year": "2012"},
+    "F": {"year": "2013"},
+    "H": {"year": "2014"},
+    "HU": {"year": "2014"},
+    "J": {"year": "2015"},
+    "JU": {"year": "2015"},
+    "JS": {"year": "2015"},
+    "K": {"year": "2016"},
+    "KU": {"year": "2016"},
+    "KS": {"year": "2016"},
+    "M": {"year": "2017"},
+    "MU": {"year": "2017"},
+    "N": {"year": "2018"},
+    "NU": {"year": "2018"},
+    "R": {"year": "2019"},
+    "RU": {"year": "2019"},
+    "T": {"year": "2020"},
+    "TU": {"year": "2020"},
+    "AU": {"year": "2021"},
+    "BU": {"year": "2022"},
+    "CU": {"year": "2023"},
+    "DU": {"year": "2024"}
+  }
+}

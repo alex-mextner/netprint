@@ -4,7 +4,8 @@
    "expect": {"category": "phone", "display_name": "Android device", "min_confidence": 0.7}},
   {"comment": "Samsung Galaxy phone named by model",
    "mac": "a6:00:00:00:00:12", "hostnames": ["Galaxy-S23"],
-   "expect": {"category": "phone", "label": "Samsung Galaxy", "display_name": "Galaxy-S23"}},
+   "expect": {"category": "phone", "label": "Samsung Galaxy", "display_name": "Samsung Galaxy S23",
+              "brand": "Samsung", "product": "Galaxy S23", "friendly_name": "Galaxy-S23", "os": "Android"}},
   {"comment": "Galaxy Tab",
    "mac": "a6:00:00:00:00:13", "hostnames": ["Galaxy-Tab-S9"],
    "expect": {"category": "tablet"}},
@@ -17,5 +18,6 @@
   {"comment": "Android TV box with adb open and a Cast receiver",
    "mac": "c2:00:00:00:00:15", "open_ports": [5555, 8008, 8009],
    "mdns": [{"type": "_googlecast._tcp", "name": "Box-abc", "txt": {"md": "Xiaomi TV Box S", "fn": "Bedroom TV box"}}],
-   "expect": {"category": "media-player", "label": "Xiaomi TV Box S", "display_name": "Bedroom TV box"}}
+   "expect": {"category": "media-player", "label": "Xiaomi TV Box S", "display_name": "Xiaomi TV Box S «Bedroom TV box»",
+              "brand": "Xiaomi", "friendly_name": "Bedroom TV box"}}
 ]

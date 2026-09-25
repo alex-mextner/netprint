@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "netprint"
-version = "0.1.0"
+version = "0.2.0"
 description = "What kind of device is that? Data-driven fingerprints (OUI, hostname, mDNS, SSDP, HTTP, ports, TTL) that classify home-network devices into categories with an icon, a confidence and the evidence."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -27,7 +27,7 @@ netprint = "netprint.__main__:main"
 include = ["netprint*"]
 
 [tool.setuptools.package-data]
-netprint = ["data/*", "data/rules/*"]
+netprint = ["data/*", "data/rules/*", "data/tables/*"]
 
 [tool.ruff]
 line-length = 100

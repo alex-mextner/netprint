@@ -40,7 +40,9 @@ from pathlib import Path
 from typing import Any
 
 from . import mac as macmod
-from .names import pick_display_name
+from . import naming as namemod
+from . import tables
+from .names import name_candidates, pick_display_name
 from .signals import SSDP_FIELDS, HttpService, MdnsService, Signals, SsdpDevice
 
 _PKG = __package__ or "netprint"  # works when vendored as <pkg>._vendor.netprint too
@@ -69,6 +71,7 @@ CONDITIONS = frozenset(
         "ttl",
         "dhcp_vendor",
         "extra",
+        "lookup",
     }
 )
 _MDNS_KEYS = ("mdns_service", "mdns_name", "mdns_txt")
@@ -92,6 +95,7 @@ _SOURCE_OF = {
     "ttl": "ttl",
     "dhcp_vendor": "dhcp",
     "extra": "extra",
+    "lookup": "lookup",
 }
 RULE_KEYS = frozenset(
     {
@@ -107,8 +111,18 @@ RULE_KEYS = frozenset(
         "demote",
         "source",
         "note",
+        "product",
+        "model",
+        "model_id",
+        "friendly",
+        "os",
+        "firmware",
+        "services",
     }
 )
+# Description fields a rule can fill (templates, like "label"); the best-ranked rule that
+# yields a value wins each one independently.
+TEXT_FIELDS = ("label", "vendor", "product", "model", "model_id", "friendly", "os", "firmware")
 
 
 class RuleError(ValueError):
@@ -148,6 +162,14 @@ class Result:
     network_gear: bool
     evidence: list[Evidence] = field(default_factory=list)
     scores: dict[str, float] = field(default_factory=dict)
+    brand: str | None = None  # "Google": from what the device says, else a non-module OUI
+    product: str | None = None  # "Chromecast HD", "MacBook Pro 16″"
+    model: str | None = None  # "MacBook Pro 16″ (M4 Pro, 2024)"; the product when no more
+    model_id: str | None = None  # "Mac16,7", "xiaomi.router.rd28", "UE48J5500"
+    friendly_name: str | None = None  # the name the device calls itself / the user gave it
+    os: str | None = None
+    firmware: str | None = None
+    services: list[dict[str, Any]] = field(default_factory=list)  # web UIs it should serve
 
     def alternatives(self, n: int = 3) -> list[dict[str, Any]]:
         ranked = sorted(self.scores.items(), key=lambda kv: -kv[1])
@@ -165,6 +187,14 @@ class Result:
             "label": self.label,
             "vendor": self.vendor,
             "display_name": self.display_name,
+            "brand": self.brand,
+            "product": self.product,
+            "model": self.model,
+            "model_id": self.model_id,
+            "friendly_name": self.friendly_name,
+            "os": self.os,
+            "firmware": self.firmware,
+            "services": self.services,
             "random_mac": self.random_mac,
             "network_gear": self.network_gear,
             "evidence": [e.to_dict() for e in self.evidence],
@@ -195,6 +225,8 @@ class Rule:
     origin: str = ""
     compiled: dict[str, Any] = field(default_factory=dict)
     compiled_unless: dict[str, Any] = field(default_factory=dict)
+    texts: dict[str, str] = field(default_factory=dict)  # product/model/os/... templates
+    services: tuple[dict[str, Any], ...] = ()
 
     @classmethod
     def parse(cls, raw: Any, origin: str, categories: dict[str, Category]) -> Rule:
@@ -224,6 +256,20 @@ class Rule:
         icon = raw.get("icon")
         if icon is not None and not re.fullmatch(r"mdi:[a-z0-9-]+", str(icon)):
             raise RuleError(f"{where}: icon must look like mdi:name")
+        texts: dict[str, str] = {}
+        for key in TEXT_FIELDS:
+            if key in ("label", "vendor") or raw.get(key) is None:
+                continue
+            if not isinstance(raw[key], str):
+                raise RuleError(f"{where}: {key} must be a string (a template)")
+            texts[key] = raw[key]
+        services = raw.get("services") or []
+        if not isinstance(services, list) or not all(
+            isinstance(s, dict) and isinstance(s.get("port"), int) for s in services
+        ):
+            raise RuleError(f"{where}: services must be a list of {{port, scheme, title}}")
+        if "lookup" in unless:
+            raise RuleError(f"{where}: lookup cannot be used in 'unless'")
         rule = cls(
             id=rid,
             category=category,
@@ -237,6 +283,8 @@ class Rule:
             demote=tuple(demote),
             source=raw.get("source"),
             origin=origin,
+            texts=texts,
+            services=tuple(dict(s) for s in services),
         )
         rule.compiled = _compile(when, where)
         rule.compiled_unless = _compile(unless, where + " unless") if unless else {}
@@ -248,6 +296,18 @@ class Rule:
             return None
         if self.compiled_unless and _match(self.compiled_unless, s, vendor, random) is not None:
             return None
+        if "lookup" in self.compiled:
+            spec = self.compiled["lookup"]
+            context = {f"extra.{k}": v for k, v in s.extra.items()}
+            key = _fill(spec["key"], {**context, **captures})
+            entry = tables.lookup(spec["table"], key) if key else None
+            if entry is None:
+                return None
+            for fname, pattern in spec["match"].items():
+                if not pattern.search(entry.get(fname, "")):
+                    return None
+            for fname, value in entry.items():
+                captures[f"lookup.{fname}"] = value
         return captures
 
     def primary_source(self) -> str:
@@ -283,6 +343,24 @@ def _compile(when: dict[str, Any], where: str) -> dict[str, Any]:
             if not isinstance(value, dict) or not value:
                 raise RuleError(f"{where}: {key} must be a non-empty object")
             out[key] = {str(k): _regex(v, where) for k, v in value.items()}
+        elif key == "lookup":
+            if (
+                not isinstance(value, dict)
+                or not isinstance(value.get("table"), str)
+                or not isinstance(value.get("key"), str)
+                or set(value) - {"table", "key", "match"}
+            ):
+                raise RuleError(f"{where}: lookup must be {{table, key, match?}}")
+            if value["table"] not in tables.names():
+                raise RuleError(f"{where}: lookup: unknown table {value['table']!r}")
+            match = value.get("match") or {}
+            if not isinstance(match, dict):
+                raise RuleError(f"{where}: lookup.match must be an object")
+            out[key] = {
+                "table": value["table"],
+                "key": value["key"],
+                "match": {str(k): _regex(v, where) for k, v in match.items()},
+            }
         elif key == "ssdp":
             if not isinstance(value, dict) or not value:
                 raise RuleError(f"{where}: ssdp must be a non-empty object")
@@ -464,7 +542,7 @@ def _fill(template: str | None, captures: dict[str, str]) -> str | None:
 def _auto_detail(rule: Rule, captures: dict[str, str]) -> str:
     parts: list[str] = []
     for key, value in captures.items():
-        if key in ("http_port", "random_mac") or not value:
+        if key in ("http_port", "random_mac") or key.startswith("lookup.") or not value:
             continue
         pretty = {
             "vendor": "vendor",
@@ -599,16 +677,38 @@ def classify(signals: Signals, db: Database | None = None, alias: str | None = N
         ((r, cap) for r, cap in fired if r.category is None), key=lambda rc: -rc[0].weight
     )
     context = {f"extra.{k}": v for k, v in signals.extra.items()}
-    label = None
-    rule_vendor = None
+    naming = namemod.default_naming()
+    values: dict[str, str] = {}
+    brand = None
     icon = None
+    services: dict[int, dict[str, Any]] = {}
     for r, cap in [*winning, *hints]:
-        if label is None and r.label:
-            label = _fill(r.label, {**context, **cap})
-        if rule_vendor is None and r.vendor:
-            rule_vendor = _fill(r.vendor, {**context, **cap})
+        filled = {**context, **cap}
+        for key in TEXT_FIELDS:
+            template = (
+                r.label if key == "label" else r.vendor if key == "vendor" else r.texts.get(key)
+            )
+            if key not in values and template:
+                value = _fill(template, filled)
+                if value:
+                    values[key] = value
+        if brand is None and r.vendor:
+            brand = namemod.canonical_brand(_fill(r.vendor, filled), naming)
         if icon is None and r.icon and r.category == category:
             icon = r.icon
+        for svc in r.services:
+            port = int(svc["port"])
+            if port not in services:
+                title = _fill(str(svc.get("title") or ""), filled)
+                services[port] = {
+                    "port": port,
+                    "scheme": str(svc.get("scheme") or "http"),
+                    "title": title,
+                }
+    label = values.get("label")
+    rule_vendor = values.get("vendor")
+    if brand is None and vendor and not namemod.is_module_maker(vendor, naming):
+        brand = namemod.canonical_brand(vendor, naming)
     cat = db.category(category)
     evidence = [
         Evidence(
@@ -633,9 +733,34 @@ def classify(signals: Signals, db: Database | None = None, alias: str | None = N
             for r, cap in sorted(fired, key=lambda rc: -abs(rc[0].weight))
         ][:5]
     shown_vendor = rule_vendor or vendor
-    display = pick_display_name(
-        signals, label, shown_vendor, cat.label if category != UNKNOWN else None, alias
+    product = values.get("product")
+    model = values.get("model") or product
+    model_id = values.get("model_id")
+    known = category != UNKNOWN
+    vocabulary = [brand, product, model, model_id, label, shown_vendor]
+    if known:
+        vocabulary += [cat.label, cat.id]
+    candidates = name_candidates(signals, alias)
+    if values.get("friendly"):
+        candidates.insert(1 if alias else 0, values["friendly"])
+    friendly = next(
+        (c for c in candidates if namemod.is_label(c, vocabulary, naming)),
+        candidates[0] if candidates else None,
     )
+    is_label = bool(alias and friendly == alias.strip()) or namemod.is_label(
+        friendly, vocabulary, naming
+    )
+    if label:
+        kind = label
+    elif known:
+        kind = cat.label if not brand or re.search(r"[A-Z]", cat.label[1:]) else cat.label.lower()
+    else:
+        kind = None
+    display = namemod.compose(brand, product, kind, friendly, is_label, naming)
+    if not display:
+        display = pick_display_name(
+            signals, label, shown_vendor, cat.label if known else None, alias
+        )
     return Result(
         category=category,
         icon=icon or cat.icon,
@@ -647,4 +772,12 @@ def classify(signals: Signals, db: Database | None = None, alias: str | None = N
         network_gear=cat.network_gear,
         evidence=evidence,
         scores={c: round(v, 3) for c, v in scores.items()},
+        brand=brand,
+        product=product,
+        model=model,
+        model_id=model_id,
+        friendly_name=friendly,
+        os=values.get("os"),
+        firmware=values.get("firmware"),
+        services=sorted(services.values(), key=lambda s: int(s["port"])),
     )

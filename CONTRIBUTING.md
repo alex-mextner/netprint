@@ -15,7 +15,8 @@ collector would see, and what netprint should conclude:
 ```
 
 `expect` keys: `category` (required), `label`, `icon`, `display_name`, `min_confidence`,
-`max_confidence`, `network_gear`.
+`max_confidence`, `network_gear`, `brand`, `product`, `model`, `model_id`, `friendly_name`,
+`os`, `firmware`, `service_ports` (the ports of `Result.services`).
 
 **Keep it synthetic.** MACs must end in `00:00:NN` (keep a real OUI prefix if the vendor
 matters, or give `vendor` directly and no MAC); IPs only from 192.0.2.0/24, 198.51.100.0/24,
@@ -40,7 +41,13 @@ Rules live in `netprint/data/rules/<source>.json`:
 | `when` | conditions; ALL must hold |
 | `unless` | conditions that veto the rule |
 | `label` | model/kind to show ("Yandex Station Mini"); may use `{captures}` |
-| `vendor` | brand to show when the OUI is a module maker ("Yandex" for "Intertech Services") |
+| `vendor` | the brand ("Yandex" for the OUI "Intertech Services", "Google" for a Cast `md`); normalized through `data/brands.json` into `Result.brand` |
+| `product` | the product name ("Chromecast HD", "MacBook Pro 16″"): what the display name shows |
+| `model` | the full model name ("MacBook Pro 16″ (M4 Pro, 2024)"); defaults to `product` |
+| `model_id` | the machine identifier ("Mac16,7", "xiaomi.router.rd28", "UE48J5500") |
+| `friendly` | a name the device calls itself that no generic source carries |
+| `os`, `firmware` | operating system / firmware version, when the device makes them public |
+| `services` | `[{"port", "scheme", "title"}]`: web UIs this kind of device serves (a collector lists them before a scan confirms them, e.g. for a printer that is switched off) |
 | `icon` | `mdi:*` override for this specific kind |
 | `detail` | evidence text; auto-generated when omitted; may use `{captures}` |
 | `demote` | categories to halve when this fires (specific beats generic) |
@@ -68,10 +75,30 @@ you mean it.
 | `ports` / `ports_all` | any / all of these TCP ports open |
 | `ttl` | `[lo, hi]` IP TTL of an echo reply |
 | `dhcp_vendor` | DHCP option 60 |
-| `extra` | `{key: regex}` collector facts (`gateway`, `self`, `miwifi.model`, ...) |
+| `extra` | `{key: regex}` collector facts (`gateway`, `self`, `miwifi.model`, `ha.model`, `dmi.product`, `ssh.banner`, ...) |
+| `lookup` | `{"table", "key", "match"?}`: look `key` (a template over this rule's captures, e.g. `"{m}"`) up in `data/tables/<table>.json`; the rule fires only on a hit whose fields match `match` (`{field: regex}`), and `{lookup.<field>}` becomes available to its templates |
 
 `mdns_*` conditions in one rule are checked against the **same** service instance, `ssdp`
 fields against the same device, `http_*`/`favicon` against the same web service.
+
+### Lookup tables
+
+`data/tables/*.json` map identifiers to names: `apple.json` (Apple model identifiers ->
+marketing name, product, kind; GENERATED from [AppleDB](https://github.com/littlebyteorg/appledb)
+by `python -m netprint apple-update`, never edited by hand), `yandex.json` (Yandex speaker
+platforms and the Russian model names Home Assistant uses; from AlexxIT/YandexStation),
+`macos.json` (Darwin version -> macOS), `samsung_tv.json` (model-code year letters). A table
+is `{"_source": "...", "entries": {key: {field: value}}}`; keys match case-insensitively.
+
+### Names
+
+`Result.display_name` is composed by `data/naming.json`: `<brand> <product> «<friendly>»`
+("Google Chromecast «Кухня»") when the friendly name is a *label* (a room, a person, a
+nickname), `<brand> <product>` when it only repeats the product ("Хромкаст", "MacBook-Pro"),
+the label alone when no product is known ("SAM-PC"). `synonyms` there teach which words
+mean a product word (add translations and nicknames), `display_product` shortens product
+names for display only, `templates` change the format. `data/brands.json` folds manufacturer
+spellings into one brand and lists chip/module makers whose OUI never names a brand.
 
 ### Captures and templates
 

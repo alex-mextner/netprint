@@ -10,7 +10,17 @@ from typing import Any
 import pytest
 
 import netprint
-from netprint import Signals, classify, load_db
+import netprint.tables
+from netprint import (
+    Signals,
+    canonical_brand,
+    classify,
+    compose,
+    is_label,
+    is_module_maker,
+    load_db,
+    load_naming,
+)
 from netprint.__main__ import main as cli_main
 from netprint.engine import RuleError
 from netprint.mac import compact_ieee_csv, is_locally_administered, normalize, vendor
@@ -41,8 +51,20 @@ def test_zoo(item: dict[str, Any]) -> None:
         assert result.label == expect["label"], why
     if "icon" in expect:
         assert result.icon == expect["icon"], why
-    if "display_name" in expect:
-        assert result.display_name == expect["display_name"], why
+    for key in (
+        "display_name",
+        "brand",
+        "product",
+        "model",
+        "model_id",
+        "friendly_name",
+        "os",
+        "firmware",
+    ):
+        if key in expect:
+            assert getattr(result, key) == expect[key], f"{key}: {why}"
+    if "service_ports" in expect:
+        assert [s["port"] for s in result.services] == expect["service_ports"], why
     if "min_confidence" in expect:
         assert result.confidence >= expect["min_confidence"], why
     if "max_confidence" in expect:
@@ -209,3 +231,136 @@ def test_cli_classify(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Non
 def test_unknown_signal_field_rejected() -> None:
     with pytest.raises(ValueError, match="colour"):
         Signals.from_dict({"colour": "red"})
+
+
+# ── naming, brands, lookup tables ────────────────────────────────────────────
+def test_canonical_brand() -> None:
+    assert canonical_brand("Samsung Electronics Co.,Ltd") == "Samsung"
+    assert canonical_brand("Яндекс") == "Yandex"
+    assert canonical_brand("TUYA INC.") == "Tuya"
+    assert canonical_brand("Micro-Star International Co., Ltd.") == "MSI"
+    assert canonical_brand("Acme Widgets GmbH") == "Acme Widgets"
+    for junk in ("moonraker", "integration", "", None, "AlexxIT"):
+        assert canonical_brand(junk) is None, junk
+    assert is_module_maker("Espressif") and is_module_maker("Chongqing Fugui Electronics")
+    assert not is_module_maker("Apple") and not is_module_maker(None)
+
+
+@pytest.mark.parametrize(
+    "name, vocabulary, label",
+    [
+        ("Кухня", ["Google", "Chromecast HD"], True),
+        ("Хромкаст", ["Google", "Chromecast HD"], False),
+        ("Sam's MBP", ["Apple", "MacBook Pro 16″"], True),
+        ("MacBook-Pro", ["Apple", "MacBook Pro 16″"], False),
+        ("[TV] UE48J5500", ["Samsung", "TV 48″ J5500", "UE48J5500"], False),
+        ("Television", ["Samsung", "TV 48″ J5500"], False),
+        ("K1SE-0A1B", ["Creality", "K1 SE"], False),
+        ("rd28_minet_a0f1", ["Xiaomi", "Mesh System", "RD28"], False),
+        ("mini-kids", ["Yandex", "Station Mini 2"], True),
+        (None, ["x"], False),
+    ],
+)
+def test_is_label(name: str | None, vocabulary: list[str], label: bool) -> None:
+    assert is_label(name, vocabulary) is label
+
+
+def test_compose_and_overrides() -> None:
+    assert compose("Google", "Chromecast HD", None, "Кухня", True) == "Google Chromecast «Кухня»"
+    assert compose("Google", "Chromecast HD", None, "Хромкаст", False) == "Google Chromecast"
+    assert compose("Yandex", "Yandex Station", None, None, False) == "Yandex Station"
+    assert compose("Tuya", None, "smart plug", None, False) == "Tuya smart plug"
+    assert compose(None, None, "Laptop", "SYNTH-WIN", True) == "SYNTH-WIN"
+    assert compose(None, None, None, None, False) is None
+    custom = load_naming({"templates": {"product_label": "{friendly} ({brand} {product})"}})
+    assert compose("Apple", "iPad", None, "Kids", True, custom) == "Kids (Apple iPad)"
+
+
+def test_apple_table_builder() -> None:
+    records = [
+        {"name": "MacBook Pro (16-inch, M4 Pro, Nov 2024)", "type": "MacBook Pro",
+         "identifier": ["Mac16,7"], "key": "Mac16,7", "soc": "M4 Pro", "released": "2024-11-08"},
+        {"name": "HomePod mini (China Mainland)", "type": "HomePod",
+         "identifier": ["AudioAccessory5,1"], "key": "AudioAccessory5,1-CHN"},
+        {"name": "HomePod mini", "type": "HomePod", "identifier": ["AudioAccessory5,1"],
+         "key": "AudioAccessory5,1"},
+        {"name": "iPad Pro 11-inch (M4) Wi-Fi", "type": "iPad Pro", "identifier": "iPad16,3",
+         "key": "iPad16,3", "soc": "M4"},
+        {"name": "Apple TV 4K (3rd generation) Wi-Fi", "type": "Apple TV",
+         "identifier": ["AppleTV14,1"], "key": "AppleTV14,1"},
+        {"name": "Mac mini (2018)", "type": "Mac mini", "identifier": ["Macmini8,1"],
+         "released": "2018-11-07"},
+        {"name": "USB cable", "type": "Accessories", "identifier": []},
+        "not a record",
+    ]  # fmt: skip
+    table = netprint.tables.build_apple_table(records)
+    assert table["Mac16,7"]["model"] == "MacBook Pro 16″ (M4 Pro, 2024)"
+    assert table["Mac16,7"]["product"] == "MacBook Pro 16″" and table["Mac16,7"]["kind"] == "laptop"
+    assert table["AudioAccessory5,1"]["name"] == "HomePod mini"
+    assert table["iPad16,3"]["model"] == "iPad Pro 11″ (M4, Wi-Fi)"
+    assert table["AppleTV14,1"]["product"] == "Apple TV 4K (3rd generation)"
+    assert table["Macmini8,1"]["model"] == "Mac mini (2018)"
+    assert set(table) == {"Mac16,7", "AudioAccessory5,1", "iPad16,3", "AppleTV14,1", "Macmini8,1"}
+    assert netprint.tables.lookup("apple", "mac16,7") is not None  # the shipped table
+    assert netprint.tables.lookup("apple", "") is None
+    assert "apple" in netprint.tables.names() and "yandex" in netprint.tables.names()
+
+
+def test_apple_update_cli(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    src = tmp_path / "main.json"
+    src.write_text(json.dumps([{"name": "iPhone 15 Pro", "type": "iPhone", "identifier": ["x"]}]))
+    assert cli_main(["apple-update", "--json", str(src)]) == 1  # too few to be the real list
+
+
+@pytest.mark.parametrize(
+    "rule, message",
+    [
+        ({"when": {"hostname": "x", "lookup": {"table": "nope", "key": "{x}"}}}, "unknown table"),
+        ({"when": {"hostname": "x", "lookup": {"table": "apple"}}}, "lookup must be"),
+        (
+            {"when": {"hostname": "x", "lookup": {"table": "apple", "key": "k", "match": 1}}},
+            "match",
+        ),
+        (
+            {"when": {"hostname": "x"}, "unless": {"lookup": {"table": "apple", "key": "k"}}},
+            "unless",
+        ),
+        ({"when": {"hostname": "x"}, "product": 5}, "template"),
+        ({"when": {"hostname": "x"}, "services": [{"title": "no port"}]}, "services"),
+    ],
+)
+def test_bad_lookup_rules(tmp_path: Path, rule: dict[str, Any], message: str) -> None:
+    path = tmp_path / "bad.json"
+    path.write_text(json.dumps({"rules": [{"id": "x.y", "category": "tv", **rule}]}))
+    with pytest.raises(RuleError, match=message):
+        load_db([path])
+
+
+def test_lookup_rule_and_services(tmp_path: Path) -> None:
+    path = tmp_path / "r.json"
+    rule = {
+        "id": "t.lookup",
+        "category": "speaker",
+        "weight": 0.9,
+        "when": {
+            "hostname": "^box-(?P<p>\\w+)$",
+            "lookup": {"table": "yandex", "key": "{p}", "match": {"kind": "^speaker$"}},
+        },
+        "vendor": "{lookup.brand}",
+        "product": "{lookup.product}",
+        "services": [{"port": 8080, "title": "UI of {lookup.product}"}],
+    }
+    path.write_text(json.dumps({"rules": [rule]}))
+    db = load_db([path])
+    r = classify(Signals(hostnames=["box-cucumber"]), db)
+    assert (r.brand, r.product) == ("Yandex", "Station Midi")
+    assert r.services == [{"port": 8080, "scheme": "http", "title": "UI of Station Midi"}]
+    assert classify(Signals(hostnames=["box-goya"]), db).product is None  # a TV, not matched
+    assert classify(Signals(hostnames=["box-nothing"]), db).product is None
+
+
+def test_cli_prints_facts(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    f = tmp_path / "d.json"
+    f.write_text(json.dumps({"mdns": [{"type": "_device-info._tcp", "txt": {"model": "Mac16,7"}}]}))
+    assert cli_main(["classify", str(f)]) == 0
+    assert "model_id=Mac16,7" in capsys.readouterr().out

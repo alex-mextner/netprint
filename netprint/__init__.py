@@ -27,9 +27,11 @@ from .mac import is_locally_administered, normalize, vendor
 from .markers import find as find_markers
 from .names import clean as clean_name
 from .names import is_generic as is_generic_name
+from .names import name_candidates
+from .naming import canonical_brand, compose, is_label, is_module_maker, load_naming
 from .signals import HttpService, MdnsService, Signals, SsdpDevice
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 
 def fingerprint_ports(db: Database | None = None) -> list[int]:
@@ -57,14 +59,20 @@ __all__ = [
     "Signals",
     "SsdpDevice",
     "__version__",
+    "canonical_brand",
     "classify",
     "clean_name",
+    "compose",
     "default_db",
     "find_markers",
     "fingerprint_ports",
     "is_generic_name",
+    "is_label",
     "is_locally_administered",
+    "is_module_maker",
     "load_db",
+    "load_naming",
+    "name_candidates",
     "normalize",
     "vendor",
 ]

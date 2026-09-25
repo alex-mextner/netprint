@@ -60,6 +60,15 @@
     {"id": "host.server-word", "category": "server", "weight": 0.6, "when": {"hostname": "(^|[-_])(server|srv\\d*|proxmox|pve\\d*|esxi|docker|nuc|homelab|home-?server|сервер|unraid|kube|k8s|node\\d+)([-_]|$)"}},
     {"id": "host.nas", "category": "nas", "weight": 0.85, "when": {"hostname": "(^|[-_])nas([-_]|\\d|$)|diskstation|synology|^ds\\d{3,4}|qnap|^ts-\\d{3}|truenas|freenas|openmediavault|^omv|readynas|mycloud|wdmycloud|хранилище"}},
     {"id": "host.router", "category": "router", "weight": 0.65, "when": {"hostname": "(^|[-_])(router|gateway|gw|openwrt|lede|keenetic|mikrotik|routeros|pfsense|opnsense|fritz|asuswrt|dd-wrt|роутер|маршрутизатор)([-_]|\\d|$)"}},
-    {"id": "host.ap", "category": "access-point", "weight": 0.65, "when": {"hostname": "(^|[-_])(ap\\d*|access-?point|mesh|repeater|extender|satellite|deco|eero|orbi|velop|unifi|uap|miwifi|xiaomi-?router|redmi-?router|rd\\d\\d|ax\\d{4}|точка|репитер)([-_]|\\d|$)|_minet_"}}
+    {"id": "host.ap", "category": "access-point", "weight": 0.65, "when": {"hostname": "(^|[-_])(ap\\d*|access-?point|mesh|repeater|extender|satellite|deco|eero|orbi|velop|unifi|uap|miwifi|xiaomi-?router|redmi-?router|rd\\d\\d|ax\\d{4}|точка|репитер)([-_]|\\d|$)|_minet_"}},
+
+    {"id": "host.galaxy.product", "category": null, "weight": 0.8, "when": {"hostname": "^(samsung-?)?galaxy[- _]?(?P<m>(s|a|z|m|f|note|fold|flip|tab-?s?|watch|book)[- _]?\\d+[a-z+]*( ?(ultra|plus|fe|lite|5g))?)"}, "vendor": "Samsung", "product": "Galaxy {m}", "os": "Android"},
+    {"id": "host.pixel.product", "category": null, "weight": 0.8, "when": {"hostname": "(^|[-_ ])pixel[- _]?(?P<m>\\d+[a-z]*( ?(pro|xl|fold|a))*)"}, "unless": {"hostname": "pixel-?(book|buds)"}, "vendor": "Google", "product": "Pixel {m}", "os": "Android"},
+    {"id": "host.xiaomi-phone.product", "category": null, "weight": 0.75, "when": {"hostname": "^(?P<b>redmi|poco|xiaomi)[- _](?P<m>(note[- _])?\\d+[a-z]*([- _](pro|ultra|plus|lite|t))*)"}, "unless": {"hostname": "redmi-?(book|router|pad)|xiaomi-?(router|pad|tv)"}, "vendor": "{b}", "product": "{b} {m}", "os": "Android"},
+    {"id": "host.android.os", "category": null, "weight": 0.5, "when": {"hostname": "^android[-_]|(^|[-_])(galaxy|pixel|redmi|poco|oneplus|huawei|honor|oppo|vivo|realme|moto|xperia)"}, "os": "Android"},
+    {"id": "host.windows.os", "category": null, "weight": 0.6, "when": {"hostname": "^(desktop|laptop)-[a-z0-9]{6,8}$"}, "os": "Windows"},
+    {"id": "host.apple-mobile.os", "category": null, "weight": 0.4, "when": {"hostname": "iphone|ipad"}, "unless": {"hostname": "iphone-?(charger|dock)"}, "vendor": "Apple", "os": "iOS"},
+    {"id": "host.apple-mac.hint", "category": null, "weight": 0.4, "when": {"hostname": "macbook|imac|mac-?mini|mac-?studio|(^|[-_ ])(mbp|mba)([-_ ]|\\d|$)"}, "vendor": "Apple", "os": "macOS"},
+    {"id": "host.apple-watch.product", "category": null, "weight": 0.6, "when": {"hostname": "apple-?watch"}, "vendor": "Apple", "product": "Apple Watch", "os": "watchOS"}
   ]
 }

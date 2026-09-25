@@ -10,6 +10,7 @@ rules recognised ("Yandex Station Mini") or "<vendor> <category>".
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 
 from .signals import Signals
 
@@ -60,10 +61,13 @@ def is_generic(name: str | None) -> bool:
     return any(p.match(text) for p in _GENERIC)
 
 
+_BONJOUR_CLASH = re.compile(r"\s*\(\d{1,2}\)$")
+
+
 def friendly_names(signals: Signals) -> list[str]:
     """User-facing names a device announces about itself, best first."""
     out: list[str] = []
-    for key in ("miwifi.name", "name"):
+    for key in ("name", "miwifi.name", "friendly_name"):
         if signals.extra.get(key):
             out.append(signals.extra[key])
     for svc in signals.mdns:
@@ -89,8 +93,32 @@ def friendly_names(signals: Signals) -> list[str]:
                 name = svc.name.split("@", 1)[-1] if kind == "_raop._tcp" else svc.name
                 if kind == "_workstation._tcp":
                     name = re.sub(r"\s*\[[0-9a-f:]{17}\]$", "", name, flags=re.I)
-                out.append(name)
-    return [clean(n) for n in out if n and not is_generic(n)]
+                out.append(_BONJOUR_CLASH.sub("", name))
+    return _dedupe(clean(n) for n in out if n and not is_generic(n))
+
+
+def _dedupe(names: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for name in names:
+        key = name.casefold()
+        if name and key not in seen:
+            seen.add(key)
+            out.append(name)
+    return out
+
+
+def name_candidates(signals: Signals, alias: str | None = None) -> list[str]:
+    """Every human name the device goes by, best first: the local alias, a name given in a
+    management system (``extra["name"]``, e.g. Home Assistant), what the device announces
+    (Cast ``fn``, UPnP ``friendlyName``, the Bonjour/ESPHome/Xiaomi name), then its
+    meaningful host and NetBIOS names. Generic names (``android-1f2e...``) are left out."""
+    out: list[str] = []
+    if alias and alias.strip():
+        out.append(alias.strip())
+    out.extend(friendly_names(signals))
+    out.extend(clean(n) for n in signals.all_names() if not is_generic(n))
+    return _dedupe(out)
 
 
 _MODEL_TAG = re.compile(r"^[A-Za-z][A-Za-z0-9]{1,15}[-_][0-9A-Fa-f]{4,6}$")

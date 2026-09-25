@@ -52,6 +52,12 @@
     {"id": "port.espressif-web", "category": "esp-diy", "weight": 0.35, "when": {"ports": [80], "vendor": "^Espressif"}, "unless": {"ports": [6668]}, "detail": "web server on an Espressif chip (ESPHome/Tasmota/WLED)"},
     {"id": "port.node-red", "category": "server", "weight": 0.5, "when": {"ports": [1880]}, "detail": "port 1880 (Node-RED)"},
     {"id": "port.kodi", "category": "media-player", "weight": 0.25, "when": {"ports": [9090, 8080], "hostname": "kodi|libreelec|coreelec|osmc"}},
-    {"id": "port.hap", "category": "iot-sensor", "weight": 0.15, "when": {"ports": [51826, 51827]}, "detail": "HomeKit accessory port"}
+    {"id": "port.hap", "category": "iot-sensor", "weight": 0.15, "when": {"ports": [51826, 51827]}, "detail": "HomeKit accessory port"},
+
+    {"id": "port.mainsail", "category": "3d-printer", "weight": 0.5, "when": {"ports_all": [7125, 81]}, "unless": {"ports": [8123]}, "icon": "mdi:printer-3d-nozzle", "detail": "Moonraker + :81 (Mainsail/Fluidd as a second UI)"},
+    {"id": "port.creality-webrtc", "category": "3d-printer", "weight": 0.55, "when": {"ports_all": [9999, 8000]}, "unless": {"ports": [8123, 22]}, "vendor": "Creality", "icon": "mdi:printer-3d-nozzle", "detail": "ports 9999+8000 (Creality OS websocket + WebRTC camera)"},
+    {"id": "port.creality.services", "category": null, "when": {"ports_all": [9999, 80]}, "unless": {"ports": [8123]}, "services": [{"port": 80, "title": "Creality web UI"}]},
+    {"id": "port.windows.os", "category": null, "weight": 0.35, "when": {"ports": [7680, 3389, 5357]}, "os": "Windows"},
+    {"id": "port.iphone-sync.os", "category": null, "weight": 0.2, "when": {"ports": [62078]}, "vendor": "Apple", "os": "iOS"}
   ]
 }

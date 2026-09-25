@@ -25,6 +25,22 @@
     {"id": "extra.miwifi.mesh-node", "category": "access-point", "weight": 0.95, "when": {"extra": {"miwifi.is_ap": "^1$"}}, "vendor": "Xiaomi", "source": "miwifi", "label": "Mesh node", "detail": "listed as a mesh node / AP by the Xiaomi router"},
     {"id": "extra.miwifi.label-hint", "category": null, "when": {"extra": {"miwifi.display_name": "(?P<n>.+)"}}, "label": "{n}"},
     {"id": "extra.router-name.hint", "category": null, "when": {"extra": {"miwifi.name": "(?P<n>.+)"}}, "source": "miwifi"},
-    {"id": "extra.wifi-client.not-wired-gear", "category": "desktop", "weight": -0.2, "when": {"extra": {"wifi": "^1$"}}, "detail": "on Wi-Fi: less likely a desktop tower"}
+    {"id": "extra.wifi-client.not-wired-gear", "category": "desktop", "weight": -0.2, "when": {"extra": {"wifi": "^1$"}}, "detail": "on Wi-Fi: less likely a desktop tower"},
+
+    {"id": "extra.miwifi.product", "category": null, "weight": 0.97, "when": {"extra": {"miwifi.display_name": "(?P<n>.+)"}}, "vendor": "Xiaomi", "product": "{n}", "model": "{n} ({extra.miwifi.hardware})", "model_id": "{extra.miwifi.model}", "firmware": "{extra.miwifi.romversion}", "source": "miwifi"},
+    {"id": "extra.miwifi.product-no-hw", "category": null, "weight": 0.96, "when": {"extra": {"miwifi.display_name": "(?P<n>.+)"}}, "model": "{n}", "source": "miwifi"},
+    {"id": "extra.miwifi.routername", "category": null, "weight": 0.5, "when": {"extra": {"miwifi.routername": "(?P<n>.+)"}}, "friendly": "{n}", "source": "miwifi"},
+    {"id": "extra.miwifi.services", "category": null, "when": {"extra": {"miwifi.model": "^xiaomi\\.router\\."}}, "services": [{"port": 443, "scheme": "https", "title": "Xiaomi router admin"}], "source": "miwifi"},
+    {"id": "extra.router.product", "category": null, "weight": 0.97, "when": {"extra": {"router.model": "(?P<m>.+)"}}, "vendor": "{extra.router.vendor}", "product": "{m}", "model": "{m}", "firmware": "{extra.router.firmware}", "source": "router", "note": "the router API's own model/firmware of the gateway (router-cli passes router.* for the default gateway)"},
+    {"id": "extra.dmi.product", "category": null, "weight": 0.95, "when": {"extra": {"dmi.product": "(?P<p>.+)"}}, "vendor": "{extra.dmi.vendor}", "product": "{p}", "model": "{p}", "source": "self", "note": "SMBIOS/DMI of the collector's own host"},
+    {"id": "extra.os-name", "category": null, "weight": 0.9, "when": {"extra": {"os.name": "(?P<o>.+)"}}, "os": "{o}", "source": "self"},
+    {"id": "extra.moonraker.firmware", "category": null, "weight": 0.7, "when": {"extra": {"moonraker.software_version": "(?P<v>.+)"}}, "firmware": "Klipper {v}", "source": "moonraker"},
+    {"id": "extra.moonraker.services", "category": null, "when": {"extra": {"moonraker.software_version": "."}}, "services": [{"port": 7125, "title": "Moonraker API"}], "source": "moonraker"},
+    {"id": "extra.ssh.os", "category": null, "weight": 0.6, "when": {"extra": {"ssh.banner": "OpenSSH[_\\w.]*[ -](?P<d>Ubuntu|Debian|Raspbian|FreeBSD|Fedora|Alpine)"}}, "os": "{d}", "source": "ssh", "detail": "SSH banner {extra.ssh.banner}"},
+    {"id": "extra.ssh.raspbian", "category": "raspberry-pi", "weight": 0.6, "when": {"extra": {"ssh.banner": "Raspbian"}}, "source": "ssh", "detail": "SSH banner {extra.ssh.banner}"},
+    {"id": "extra.ssh.dropbear", "category": null, "weight": 0.4, "when": {"extra": {"ssh.banner": "dropbear"}}, "os": "Linux (embedded)", "source": "ssh"},
+    {"id": "extra.ssh.windows", "category": null, "weight": 0.6, "when": {"extra": {"ssh.banner": "OpenSSH_for_Windows"}}, "os": "Windows", "source": "ssh"},
+    {"id": "ttl.windows.os", "category": null, "weight": 0.3, "when": {"ttl": [100, 128]}, "os": "Windows"},
+    {"id": "netbios.windows.os", "category": null, "weight": 0.35, "when": {"netbios": ".", "ports": [7680, 5357, 3389]}, "os": "Windows"}
   ]
 }

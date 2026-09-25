@@ -2,12 +2,15 @@
 
 **What kind of device is that?** netprint turns what you can observe about a device on a home
 network (MAC vendor, hostname, mDNS/DNS-SD services and TXT records, SSDP/UPnP descriptions,
-web UI titles, open ports, TTL, NetBIOS names, router API facts) into a **category**, a
-**Material Design icon**, a **confidence**, a **display name** and the **evidence** behind it.
+web UI titles, open ports, TTL, NetBIOS names, router API facts, Home Assistant's registry)
+into a **category**, a **Material Design icon**, a **confidence**, the device's **brand,
+product, model, OS and firmware**, the **name it goes by**, a **display name** and the
+**evidence** behind it.
 
 ```
 $ python -m netprint classify tv.json
-tv.json: tv (0.99) mdi:television  [TV] Samsung 5 Series (48)
+tv.json: tv (0.99) mdi:television  Samsung TV 48″ J5500
+    brand=Samsung  product=TV 48″ J5500  model=UE48J5500 (2015)  model_id=UE48J5500  friendly_name=[TV] Samsung 5 Series (48)
     +0.95  [ssdp] Samsung TV model UE48J5500
     +0.90  [ssdp] UPnP name [TV] Samsung 5 Series (48)
     +0.85  [ssdp] UPnP st=urn:samsung.com:device:RemoteControlReceiver:1
@@ -15,8 +18,15 @@ tv.json: tv (0.99) mdi:television  [TV] Samsung 5 Series (48)
     ...
 ```
 
-- **Data, not code.** ~480 rules in `netprint/data/rules/*.json`; adding a device family is
+- **Data, not code.** ~580 rules in `netprint/data/rules/*.json`; adding a device family is
   a JSON edit plus a fixture. See [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Brand from all the evidence, not just the OUI.** A Chromecast on a private Wi-Fi MAC is
+  still "Google" (its Cast model says so); a Snapmaker is not "AMPAK" (its Wi-Fi module).
+  Apple model identifiers (`Mac16,7`, `iPhone16,1`, `Watch7,8`) become marketing names from a
+  table generated from [AppleDB](https://github.com/littlebyteorg/appledb).
+- **Names people recognise.** "Google Chromecast «Кухня»", "Apple MacBook Pro 16″
+  «Sam's MBP»": brand + product + the device's own name when that name is a label (a
+  room, a person) rather than a repeat of the model. Configurable in `data/naming.json`.
 - **Stdlib only**, Python 3.11+. No network access: netprint classifies, it does not scan.
   Collectors (an mDNS browser, an SSDP listener, a port probe, a router API) live in the
   tools that use it, e.g. [router-cli](https://github.com/alex-mextner/router-cli).
@@ -65,9 +75,11 @@ signals = Signals(
 )
 r = classify(signals)
 r.category, r.icon, r.confidence, r.display_name
-# ('phone', 'mdi:cellphone', 0.99, 'Sams-iPhone')
+# ('phone', 'mdi:cellphone', 0.99, "Apple iPhone 14 Pro «Sam's iPhone»")
+r.brand, r.product, r.model_id, r.friendly_name, r.os
+# ('Apple', 'iPhone 14 Pro', 'iPhone15,2', "Sam's iPhone", 'iOS')
 [e.to_dict() for e in r.evidence]
-# [{'source': 'mdns', 'detail': 'Apple model iPhone15,2', 'weight': 0.98}, ...]
+# [{'source': 'mdns', 'detail': 'Apple model iPhone15,2: iPhone 14 Pro', 'weight': 0.99}, ...]
 ```
 
 `Signals` fields (all optional): `mac`, `vendor` (looked up from the MAC when omitted),
@@ -101,6 +113,7 @@ python -m netprint classify device.json [--rules my-rules/] [--json]
 python -m netprint lint [--rules my-rules/]
 python -m netprint categories
 python -m netprint oui-update            # maintainers: refresh data/oui.tsv.gz from the IEEE
+python -m netprint apple-update          # maintainers: regenerate data/tables/apple.json (AppleDB)
 ```
 
 ## Privacy
@@ -111,4 +124,7 @@ real network.
 
 ## License
 
-MIT. The OUI table is derived from the public IEEE registry.
+MIT. The OUI table is derived from the public IEEE registry. `data/tables/apple.json` is
+generated from [AppleDB](https://github.com/littlebyteorg/appledb) (MIT); `data/tables/yandex.json`
+follows the platform list of [AlexxIT/YandexStation](https://github.com/AlexxIT/YandexStation)
+(MIT).

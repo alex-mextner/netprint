@@ -4,6 +4,7 @@ python -m netprint classify device.json [more.json ...] [--rules DIR] [--json]
 python -m netprint lint [--rules DIR]
 python -m netprint categories
 python -m netprint oui-update [--csv oui.csv]     (maintainers: rebuilds data/oui.tsv.gz)
+python -m netprint apple-update [--json main.json] (maintainers: rebuilds data/tables/apple.json)
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ import sys
 import urllib.request
 from pathlib import Path
 
-from . import __version__, fingerprint_ports
+from . import __version__, fingerprint_ports, tables
 from .engine import RuleError, classify, load_db
 from .mac import compact_ieee_csv, encode_table
 from .signals import Signals
@@ -46,7 +47,28 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("categories", help="list categories and icons")
     upd = sub.add_parser("oui-update", help="rebuild netprint/data/oui.tsv.gz from the IEEE CSV")
     upd.add_argument("--csv", help="a local oui.csv instead of downloading it")
+    apple = sub.add_parser(
+        "apple-update", help="rebuild data/tables/apple.json (model ids) from AppleDB"
+    )
+    apple.add_argument("--json", dest="source", help="a local AppleDB main.json")
     args = ap.parse_args(argv)
+
+    if args.cmd == "apple-update":
+        if args.source:
+            raw = Path(args.source).read_text("utf-8")
+        else:
+            req = urllib.request.Request(tables.APPLEDB_URL, headers={"User-Agent": "netprint"})
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                raw = resp.read().decode("utf-8")
+        apple_table = tables.build_apple_table(json.loads(raw))
+        if len(apple_table) < 100:
+            print(f"error: only {len(apple_table)} identifiers parsed", file=sys.stderr)
+            return 1
+        target = Path(__file__).parent / "data" / "tables" / "apple.json"
+        doc = tables.apple_document(apple_table)
+        target.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n", "utf-8")
+        print(f"wrote {len(apple_table)} Apple model identifiers to {target}")
+        return 0
 
     if args.cmd == "categories":
         db = load_db()
@@ -94,6 +116,13 @@ def main(argv: list[str] | None = None) -> int:
         print(
             f"{r['file']}: {r['category']} ({r['confidence']:.2f}) {r['icon']}  {r['display_name']}"
         )
+        facts = [
+            f"{key}={r[key]}"
+            for key in ("brand", "product", "model", "model_id", "friendly_name", "os", "firmware")
+            if r.get(key)
+        ]
+        if facts:
+            print("    " + "  ".join(facts))
         for e in r["evidence"]:
             print(f"    {e['weight']:+.2f}  [{e['source']}] {e['detail']}")
     return 0

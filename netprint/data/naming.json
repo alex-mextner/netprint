@@ -1,0 +1,36 @@
+{
+  "_comment": "How a device's display name is composed. 'templates': 'product_label' when a product is known and the device has a friendly name that is a LABEL (a room, a person, a nickname: it adds something the brand and model do not say); 'product' when it has no such label; 'kind_label' / 'kind' when only the kind of device is known ('ESPHome light', 'smart plug'). Placeholders: {brand} {product} {kind} {friendly}; empty ones collapse. 'display_product': [regex, replacement] rewrites of the product for the display name only (the 'product' field keeps the full name). 'synonyms': words that mean the same as a product/brand word, so a friendly name made only of them ('Хромкаст', 'Television') is not a label. 'filler': words that never make a name a label. Override any key with load_naming(extra=...) or a local naming.json.",
+  "templates": {
+    "product_label": "{brand} {product} «{friendly}»",
+    "product": "{brand} {product}",
+    "kind_label": "{friendly}",
+    "kind": "{brand} {kind}"
+  },
+  "display_product": [
+    ["^Chromecast( with Google TV)? ?\\(?(HD|4K)\\)?$", "Chromecast"]
+  ],
+  "synonyms": {
+    "chromecast": ["хромкаст", "хромкас", "cast"],
+    "google": ["гугл"],
+    "apple": ["эпл", "эппл"],
+    "iphone": ["айфон"],
+    "ipad": ["айпад"],
+    "macbook": ["макбук", "mac"],
+    "watch": ["часы", "вотч"],
+    "tv": ["television", "телевизор", "телик", "тв", "smart", "smarttv"],
+    "station": ["станция", "станции", "колонка", "alice", "алиса"],
+    "yandex": ["яндекс"],
+    "mini": ["мини"],
+    "max": ["макс"],
+    "lite": ["лайт"],
+    "midi": ["миди"],
+    "printer": ["принтер", "printer3d", "3d"],
+    "mesh": ["router", "роутер", "node", "satellite"],
+    "plug": ["розетка", "socket"],
+    "speaker": ["колонка"],
+    "phone": ["телефон"],
+    "laptop": ["ноутбук", "ноут", "notebook"],
+    "xiaomi": ["сяоми", "ксиоми", "mi"]
+  },
+  "filler": ["the", "my", "a", "of", "and", "s", "new", "old", "de", "la", "le", "и", "в", "на", "мой", "моя", "новый", "новая", "local", "lan", "device", "minet", "series", "edition"]
+}

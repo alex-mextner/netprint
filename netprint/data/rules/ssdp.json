@@ -43,6 +43,13 @@
     {"id": "ssdp.xbox", "category": "game-console", "weight": 0.9, "when": {"ssdp": {"model_name": "Xbox"}}, "label": "Xbox", "vendor": "Microsoft"},
     {"id": "ssdp.playstation", "category": "game-console", "weight": 0.9, "when": {"ssdp": {"model_name": "PlayStation|PS[345]"}}, "label": "PlayStation", "vendor": "Sony"},
     {"id": "ssdp.yandex", "category": "speaker", "weight": 0.85, "when": {"ssdp": {"manufacturer": "Yandex"}}, "label": "Yandex Station", "vendor": "Yandex"},
-    {"id": "ssdp.model-hint", "category": null, "when": {"ssdp": {"manufacturer": "(?P<mf>.+)", "model_name": "(?P<mn>.+)"}}, "label": "{mf} {mn}"}
+    {"id": "ssdp.model-hint", "category": null, "weight": 0.6, "when": {"ssdp": {"manufacturer": "(?P<mf>.+)", "model_name": "(?P<mn>.+)"}}, "label": "{mf} {mn}", "vendor": "{mf}", "product": "{mn}", "model": "{mn}", "detail": "UPnP {mf} {mn}"},
+    {"id": "ssdp.manufacturer-hint", "category": null, "weight": 0.55, "when": {"ssdp": {"manufacturer": "(?P<mf>.+)"}}, "vendor": "{mf}"},
+    {"id": "ssdp.model-number", "category": null, "weight": 0.55, "when": {"ssdp": {"model_number": "(?P<n>.+)"}}, "model_id": "{n}"},
+    {"id": "ssdp.samsung-tv.decode", "category": null, "weight": 0.96, "when": {"ssdp": {"model_name": "^(?P<m>(UE|UN|UA|GU|HG)(?P<s>\\d{2})(?P<y>[A-Z]{1,2}?)(?P<n>\\d{4,5})[A-Z0-9]*)$"}, "lookup": {"table": "samsung_tv", "key": "{y}"}}, "vendor": "Samsung", "product": "TV {s}″ {y}{n}", "model": "{m} ({lookup.year})", "model_id": "{m}"},
+    {"id": "ssdp.os.android", "category": null, "weight": 0.5, "when": {"ssdp": {"server": "android(?P<v>\\d+)"}}, "os": "Android {v}"},
+    {"id": "ssdp.os.windows", "category": null, "weight": 0.5, "when": {"ssdp": {"server": "Microsoft-Windows|Windows NT|Windows/"}}, "os": "Windows"},
+    {"id": "ssdp.os.webos", "category": null, "weight": 0.5, "when": {"ssdp": {"server": "web ?OS"}}, "os": "webOS"},
+    {"id": "ssdp.os.tizen", "category": null, "weight": 0.5, "when": {"ssdp": {"server": "Tizen"}}, "os": "Tizen"}
   ]
 }
