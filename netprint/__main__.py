@@ -37,7 +37,7 @@ def _load_signal_files(paths: list[str]) -> list[tuple[str, Signals, dict[str, o
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="netprint", description=__doc__.splitlines()[0])
     ap.add_argument("--version", action="version", version=f"netprint {__version__}")
-    sub = ap.add_subparsers(dest="cmd", required=True)
+    sub = ap.add_subparsers(dest="cmd")
     c = sub.add_parser("classify", help="classify devices described in JSON signal files")
     c.add_argument("files", nargs="+")
     c.add_argument("--rules", action="append", default=[], help="extra rule file or directory")
@@ -52,6 +52,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     apple.add_argument("--json", dest="source", help="a local AppleDB main.json")
     args = ap.parse_args(argv)
+    if args.cmd is None:
+        ap.print_help()
+        return 0
 
     if args.cmd == "apple-update":
         if args.source:
