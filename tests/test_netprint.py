@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -216,6 +218,39 @@ def test_fingerprint_ports() -> None:
     ports = netprint.fingerprint_ports()
     for p in (6053, 7125, 8123, 62078, 9100, 1961):
         assert p in ports
+
+
+def test_cli_bare_launch(capsys: pytest.CaptureFixture[str]) -> None:
+    assert cli_main([]) == 0
+    output = capsys.readouterr()
+    assert "usage: netprint" in output.out
+    assert "classify" in output.out
+    assert output.err == ""
+
+
+@pytest.mark.parametrize("argv", [[], ["--help"]])
+def test_cli_module_launch(argv: list[str]) -> None:
+    result = subprocess.run(
+        [sys.executable, "-m", "netprint", *argv],
+        cwd=Path(__file__).parent.parent,
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
+    )
+    assert result.returncode == 0
+    assert "usage: netprint" in result.stdout
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize("argv", [["missing-command"], ["classify"], ["--missing-option"]])
+def test_cli_invalid_arguments(argv: list[str], capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as exc:
+        cli_main(argv)
+    assert exc.value.code == 2
+    output = capsys.readouterr()
+    assert "error:" in output.err
+    assert output.out == ""
 
 
 def test_cli_classify(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

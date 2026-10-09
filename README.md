@@ -33,6 +33,41 @@ tv.json: tv (0.99) mdi:television  Samsung TV 48″ J5500
 - **Ships the IEEE OUI (MA-L) table** and handles randomized / locally administered MACs
   (the "private Wi-Fi address" phones, watches and laptops use) as a signal of its own.
 
+## Install and start
+
+Requires Python 3.11 or newer. From your existing clone on Ubuntu:
+
+```sh
+cd ~/xp/netprint
+python3 -m venv .venv
+.venv/bin/python -m pip install .
+.venv/bin/netprint --help
+.venv/bin/python -m netprint
+```
+
+The virtual environment keeps the installation separate from system Python; no `sudo`
+or activation is needed. If Ubuntu reports that `venv`/`ensurepip` is unavailable, ask
+your administrator to provide the venv support for your Python version, then retry.
+After installation, `~/xp/netprint/.venv/bin/netprint` works from any directory.
+For module invocation, use `~/xp/netprint/.venv/bin/python -m netprint --help`.
+
+Running an uninstalled clone with `python3 -m netprint` from `~/xp` finds the outer
+checkout directory instead of the Python package inside it, producing
+`No module named netprint.__main__`. Enter the clone and install it as above first.
+A bare installed launch displays usage; use a subcommand to perform work.
+
+Try the bundled synthetic fixture without contacting any devices:
+
+```sh
+.venv/bin/netprint classify tests/fixtures/devices/printers.json --json
+.venv/bin/netprint lint
+.venv/bin/netprint categories
+```
+
+netprint classifies supplied observations; it does not discover devices or scan your
+network. The `oui-update` and `apple-update` commands are maintainer tools that download
+and rewrite bundled data, and are not needed for installation or normal use.
+
 ## Categories
 
 | id | icon | |
